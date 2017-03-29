@@ -68,7 +68,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
       read:    '/annotations/:id'
       update:  '/annotations/:id'
       destroy: '/annotations/:id'
-      search:  '/search'
+      search:  '/search_raw'
 
   # Public: The contsructor initailases the Store instance. It requires the
   # Annotator#element and an Object of options.
@@ -299,7 +299,11 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   #
   # Returns nothing.
   _onLoadAnnotationsFromSearch: (data={}) =>
-    this._onLoadAnnotations(data.rows || [])
+    # this._onLoadAnnotations(data.rows || [])
+    result = [];
+    for annraw in data.hits.hits
+      result.push($.extend({id: annraw._id}, annraw._source))
+    this._onLoadAnnotations(result)
 
   # Public: Dump an array of serialized annotations
   #
@@ -381,7 +385,11 @@ class Annotator.Plugin.Store extends Annotator.Plugin
 
     # Don't JSONify obj if making search request.
     if action is "search"
-      opts = $.extend(opts, data: obj)
+      #opts = $.extend(opts, data: obj)
+      opts = $.extend(opts, {
+        data: JSON.stringify(obj)
+        type: 'POST'
+      })
       return opts
 
     data = obj && this._dataFor(obj)
